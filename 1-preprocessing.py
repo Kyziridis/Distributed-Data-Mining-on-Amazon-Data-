@@ -20,8 +20,7 @@ import time
 from dask.distributed import Client, LocalCluster, progress
 
 
-
-
+# Specifu YOUR IP please.... and mixali vale kiallous workers exeis toumpano PC!!!
 cluster = LocalCluster(n_workers=2 , threads_per_worker=2 , ip= '145.107.189.23')
 c = Client(cluster)
 
