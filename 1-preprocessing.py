@@ -17,7 +17,13 @@ from multiprocessing import Pool
 import dask.bag as db
 import dask.dataframe as dd
 import time
+from dask.distributed import Client, LocalCluster, progress
 
+
+
+
+cluster = LocalCluster(n_workers=2 , threads_per_worker=2 , ip= '145.107.189.23')
+c = Client(cluster)
 
 # word stemmer
 stemmer = LancasterStemmer()
@@ -53,13 +59,13 @@ def ImportData():
     df = dd.from_pandas(data,npartitions=6)
     
     # Create a bag from das kDataframe
-    bag = df.to_bag()
+    bag = df.reviewText.to_bag()
     
     #Output a pandas Data Frame(data) and a numpy array(data1)
-    return data , data1 , bag
+    return data , data1 , bag , df
 
 #Call the ImportData Function
-p_data, np_data , bag= ImportData()
+p_data, np_data , bag , df= ImportData()
 
 # Creating a sample of 70% from the initial dataset
 x = random.sample(list(np.arange(np_data.shape[0])) , round(70/100*np_data.shape[0]))
@@ -89,25 +95,47 @@ def review_to_words( raw_review ):
     # 5. Remove stop words and stem the correct words
     meaningful_words = [stemmer.stem(w) for w in words if not w in stops]   
     
+    # Stem only the meaningful_words
+# =============================================================================
+#     stemmed_word = []
+#     for i in meaningful_words:
+#         stemmed_word.append(stemmer.stem(i))
+# =============================================================================
     
     return( " ".join( meaningful_words ))   
 
-
-
-# ----------------------------------------------------------#
-# This script is for parallelism and it is working
-#------------------------------------------------------------#
-# Parallel process using Pool instead of the for loop below.
+# Parallel process instead of the for loop below.
 #p = Pool(4)
 #fasoula_parallel = p.map (review_to_words , train_np_data[:,1])
 
-# Use dask to run it distributively
-#fasoula_dask = bag.map(review_to_words)
-#start = time.time()
-#fasoula_dask.compute()
-#end = time.time()
-#print(end-start)
-############################################################
+
+
+# Use dask to run it
+fasoula_dask = df.reviewText.map(review_to_words).compute()
+
+start = time.time()
+
+#out = c.compute(fasoula_dask)
+
+progress(fasoula_dask)
+end = time.time()
+print(end-start)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 print("\nCleaning/Stemming/Tokenizing the reviews....   >_\n")    
@@ -184,33 +212,3 @@ print("\nRoot Mean Square Error: " + str(RMSE))
 output.to_csv( "Bag_of_Words_model.csv", index=False, quoting=3 )
 
 matri = confusion_matrix(output.iloc[:,1] , output.iloc[:,0])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
