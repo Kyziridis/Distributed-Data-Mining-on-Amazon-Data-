@@ -81,12 +81,6 @@ stemmer = PorterStemmer()
 data = pd.read_json("sample_data.json", lines=True)
 print('\nData Loaded.')
 
-# Call the preprocess
-#now = time.time()
-#print('\nPreprocessing...')
-#preprocessed_data = list(map(review_to_words, data['reviewText']))
-#print('Time taken for preprocessing: ' + str(time.time() - now))
-
 x_TF_train , x_TF_test , y_TF_train , y_TF_test = TF_IDF(data['reviewText'], data['overall'])
 x_Count_train , x_Count_test , y_Count_train, y_Count_test = CountVect(data['reviewText'], data['overall'])
 
