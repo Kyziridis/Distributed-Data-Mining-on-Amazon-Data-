@@ -4,7 +4,8 @@ TO DO: 1) Implementation of SVR with Gradient Descend.
        3) Under-sampling, and fitting the models again (Not necessarily this week).
 
 Prediction with baseline results in MAE of about 0.87
-"""    
+"""   
+import numpy as np 
 import pandas as pd
 from nltk.corpus import stopwords
 import time
@@ -12,8 +13,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn import linear_model, svm
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
-from nltk.stem import PorterStemmer
+import sys
 
 def tokenization(x):
     return x.split(" ")
@@ -31,7 +33,7 @@ def TF_IDF(x, y, num_features = 5000):
                                  token_pattern = "\w*[a-z]\w*",\
                                  tokenizer=tokenization,\
                                  analyzer="word",\
-                                 min_df=10, ngram_range=(1,3),\
+                                 min_df=10, ngram_range=(1,2),\
                                  max_features=num_features)
 	train_data_features = vectorizer.fit_transform(x)
 	vocab = vectorizer.get_feature_names()
@@ -63,7 +65,7 @@ def CountVect(x, y, num_features = 5000):
 	return x_train, x_test, y_train, y_test
 
 def SupportVectorReg(x_train, y_train, x_test, y_test):
-    print('Training a Linear Regression Model.')
+    print('Training an SVR Model.')
     svr = svm.SVR(C=1e3, gamma=0.1)
     model = svr.fit(x_train, y_train)
     y_pred = model.predict(x_test)
@@ -76,33 +78,68 @@ def LinearReg(x_train, y_train, x_test, y_test):
     y_pred = reg.predict(x_test)
     return mean_absolute_error(y_test, y_pred)
 
-stemmer = PorterStemmer()
-# Load data
-data = pd.read_json("sample_data.json", lines=True)
-print('\nData Loaded.')
-
-x_TF_train , x_TF_test , y_TF_train , y_TF_test = TF_IDF(data['reviewText'], data['overall'])
-x_Count_train , x_Count_test , y_Count_train, y_Count_test = CountVect(data['reviewText'], data['overall'])
-
-"""Linear Regression with Count Vectorizer"""
-now = time.time()
-print("\nLinear Reg. COUNT (MAE):", LinearReg(x_Count_train , y_Count_train, x_Count_test, y_Count_test))
-print('Time taken to train: ' + str(time.time() - now))
-
-"""Linear Regression with Tf-Idf Vectorizer"""
-now = time.time()
-print("\nLinear Reg. TF (MAE):", LinearReg(x_TF_train , y_TF_train, x_TF_test, y_TF_test))
-print('Time taken to train: ' + str(time.time() - now))
-
-"""Support Vector Regression with Count Vectorizer"""
-now = time.time()
-print("\nSVR TF (MAE):", SupportVectorReg(x_TF_train , y_TF_train ,x_TF_test, y_TF_test))
-print('Time taken to train: ' + str(time.time() - now))
-
-"""Support Vector Regression with Tf-Idf Vectorizer"""
-now = time.time()
-print("\nSVR COUNT (MAE):", SupportVectorReg(x_Count_train , y_Count_train, x_Count_test, y_Count_test))
-print('Time taken to train: ' + str(time.time() - now))
+def RandomForestReg(x_train, y_train, x_test, y_test):
+	print('Training a Random Forest Regression Model.')
+	reg = RandomForestRegressor(max_features=100,n_estimators = 50,max_depth=100,n_jobs = 4)
+	reg.fit (x_train, y_train)
+	y_pred = reg.predict(x_test)
+	return mean_absolute_error(y_test, y_pred)
 
 
-#alaxa
+
+#Baseline function computes the MAE with the mean of data['overall'] as a prediction
+def Baseline(x,y):
+	base_test = np.mean(y)
+	result = np.full(len(y),base_test)
+	print("Baseline Mae:" + str(mean_absolute_error(y,result)))
+
+
+
+
+
+
+#Select the feature extraction method and the regression method
+#features='count' or 'tf-idf'
+#regressor='linear','svr' or 'rf'
+def Regression(features,regressor):
+	# Tf-Idf Vectorizer
+	if features=="tf-idf":
+		print('Feature Extraction: Tf-Idf')
+		x_train , x_test , y_train , y_test = TF_IDF(data['reviewText'], data['overall'])
+	# Count Vectorizer
+	elif features=="count":
+		print('Feature Extraction: CountVect')
+		x_train , x_test , y_train, y_test = CountVect(data['reviewText'], data['overall'])
+
+	if regressor=="linear":
+		# """Linear Regression
+		now = time.time()
+		print("\nLinear Reg. (MAE):", LinearReg(x_train , y_train, x_test, y_test))
+		print('Time taken to train: ' + str(time.time() - now))
+	elif regressor=="svr":
+		# """Support Vector Regression
+		now = time.time()
+		print("\nSVR (MAE):", SupportVectorReg(x_train , y_train ,x_test, y_test))
+		print('Time taken to train: ' + str(time.time() - now))
+	elif regressor=="rf":
+		# """Random Forest Regression"""
+		now = time.time()
+		print("\nRFR (MAE):", RandomForestReg(x_train , y_train ,x_test, y_test))
+		print('Time taken to train: ' + str(time.time() - now))
+
+
+if __name__=='__main__':
+	
+	# Load data
+	data = pd.read_json("sample_data.json", lines=True)
+	print('\nData Loaded.')
+
+	#Calling the baseline
+	Baseline(data['reviewText'],data['overall'])
+
+	#Doing the Regression
+	Regression("tf-idf","linear")
+
+
+
+
