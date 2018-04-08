@@ -4,8 +4,8 @@ TO DO: 1) Implementation of SVR with Gradient Descend.
        3) Under-sampling, and fitting the models again (Not necessarily this week).
 
 Prediction with baseline results in MAE of about 0.87
-"""   
-import numpy as np 
+"""
+import numpy as np
 import pandas as pd
 from nltk.corpus import stopwords
 import time
@@ -23,12 +23,12 @@ def tokenization(x):
 def TF_IDF(x, y, num_features = 5000):
 	"""
     Function for creating a matrix of Tf-Idf values, and then splitting in training and test sets.
-    Inputs: x = list of reviews, as returned from review_to_words() 
+    Inputs: x = list of reviews, as returned from review_to_words()
             y = column with overall rating
             num_features = Number of columns for the Tf-Idf matrix
     Output: Training and test sets containing Tf-Idf values
 	"""
-        
+
 	vectorizer = TfidfVectorizer(stop_words='english',\
                                  token_pattern = "\w*[a-z]\w*",\
                                  tokenizer=tokenization,\
@@ -44,7 +44,7 @@ def TF_IDF(x, y, num_features = 5000):
 def CountVect(x, y, num_features = 5000):
 	"""
     Function for creating a matrix of Frequencies (counts), and then splitting in training and test sets.
-    Inputs: x = list of reviews, as returned from review_to_words() 
+    Inputs: x = list of reviews, as returned from review_to_words()
             y = column with overall rating
             num_features = Number of columns for the Tf-Idf matrix
     Output: Training and test sets containing frequencies
@@ -60,7 +60,7 @@ def CountVect(x, y, num_features = 5000):
 	train_data_features = vectorizer.fit_transform(x)
 	vocab = vectorizer.get_feature_names()
 	x_train, x_test, y_train, y_test = train_test_split(train_data_features, y,\
-                                                        test_size=0.3, random_state=0)	 	                                                 
+                                                        test_size=0.3, random_state=0)
 
 	return x_train, x_test, y_train, y_test
 
@@ -68,6 +68,13 @@ def SupportVectorReg(x_train, y_train, x_test, y_test):
     print('Training an SVR Model.')
     svr = svm.SVR(C=1e3, gamma=0.1)
     model = svr.fit(x_train, y_train)
+    y_pred = model.predict(x_test)
+    return mean_absolute_error(y_test, y_pred)
+
+def SDG_SupportVectorReg(x_train, y_train, x_test, y_test):
+    print('Training an SDG_SVR Model.')
+    sdg_svr = linear_model.SGDClassifier()
+    model = sdg_svr.fit(x_train, y_train)
     y_pred = model.predict(x_test)
     return mean_absolute_error(y_test, y_pred)
 
@@ -126,10 +133,14 @@ def Regression(features,regressor):
 		now = time.time()
 		print("\nRFR (MAE):", RandomForestReg(x_train , y_train ,x_test, y_test))
 		print('Time taken to train: ' + str(time.time() - now))
-
+	elif regressor=="sdg_svr":
+		# """SDG Support Vector Regression
+		now = time.time()
+		print("\nSVR (MAE):", SDG_SupportVectorReg(x_train , y_train ,x_test, y_test))
+		print('Time taken to train: ' + str(time.time() - now))
 
 if __name__=='__main__':
-	
+
 	# Load data
 	data = pd.read_json("sample_data.json", lines=True)
 	print('\nData Loaded.')
@@ -138,8 +149,5 @@ if __name__=='__main__':
 	Baseline(data['reviewText'],data['overall'])
 
 	#Doing the Regression
-	Regression("tf-idf","linear")
-
-
-
-
+	Regression("tf-idf","sdg_svr")
+	Regression("count","sdg_svr")
