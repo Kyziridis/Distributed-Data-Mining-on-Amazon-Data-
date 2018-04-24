@@ -17,8 +17,6 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 import sys
 
-def tokenization(x):
-    return x.split(" ")
 
 def TF_IDF(x, y, num_features = 5000):
 	"""
@@ -31,7 +29,6 @@ def TF_IDF(x, y, num_features = 5000):
 
 	vectorizer = TfidfVectorizer(stop_words='english',\
                                  token_pattern = "\w*[a-z]\w*",\
-                                 tokenizer=tokenization,\
                                  analyzer="word",\
                                  min_df=10, ngram_range=(1,2),\
                                  max_features=num_features)
@@ -51,7 +48,6 @@ def CountVect(x, y, num_features = 5000):
 	"""
 	vectorizer = CountVectorizer(analyzer = "word",   \
                                  token_pattern = "\w*[a-z]\w*",\
-                                 tokenizer=tokenization,\
                                  preprocessor = None, \
                                  min_df = 10,\
                                  stop_words = 'english',   \
@@ -149,5 +145,5 @@ if __name__=='__main__':
 	Baseline(data['reviewText'],data['overall'])
 
 	#Doing the Regression
-	Regression("tf-idf","sdg_svr")
-	Regression("count","sdg_svr")
+	# Regression("tf-idf","sdg_svr")
+	Regression("tf-idf","linear")
