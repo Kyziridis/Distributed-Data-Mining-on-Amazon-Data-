@@ -11,8 +11,8 @@ There is also a file Dask_Demo.ipynb which is a mini tutorial about [DASK](https
 ### Methods
 - TF-IDF for feature extraction in distributed fahsion using 'pdsh'
 - Logistic Regression
-- Linear Model
-- Multy-Layer-Perceptron
+- Linear Regression
+- Multilayer Perceptron
 - Naive Bayes Classifier
 
 Download and Enjoy<br>
